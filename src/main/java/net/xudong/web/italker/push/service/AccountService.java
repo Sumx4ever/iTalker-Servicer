@@ -1,6 +1,6 @@
 package net.xudong.web.italker.push.service;
 
-import net.xudong.web.italker.push.bean.User;
+import net.xudong.web.italker.push.bean.db.User;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -29,7 +29,6 @@ public class AccountService {
     public User post() {
         User user = new User();
         user.setName("admin");
-        user.setAge(16);
         return user;
     }
 
