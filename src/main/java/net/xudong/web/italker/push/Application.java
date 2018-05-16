@@ -1,6 +1,7 @@
 package net.xudong.web.italker.push;
 
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import net.xudong.web.italker.push.provider.GsonProvider;
 import net.xudong.web.italker.push.service.AccountService;
 import org.glassfish.jersey.server.ResourceConfig;
 
@@ -22,7 +23,9 @@ public class Application extends ResourceConfig {
         packages(AccountService.class.getPackage().getName());
 
         //2.注册json的解析器
-        register(JacksonJsonProvider.class);
+//        register(JacksonJsonProvider.class);
+        // 转换解析器为Gson
+        register(GsonProvider.class);
 
         //3.注册日志打印输出
         register(Logger.class);

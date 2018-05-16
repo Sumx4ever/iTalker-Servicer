@@ -1,6 +1,9 @@
 package net.xudong.web.italker.push.service;
 
+import net.xudong.web.italker.push.bean.api.account.RegisterModel;
+import net.xudong.web.italker.push.bean.card.UserCard;
 import net.xudong.web.italker.push.bean.db.User;
+import net.xudong.web.italker.push.factory.UserFactory;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -14,22 +17,34 @@ import javax.ws.rs.core.MediaType;
 @Path("/account")
 public class AccountService {
 
-    //127.0.0.1/api/account/login
-    @GET
-    @Path("/login")
-    public String get() {
-        return "You get the login by get.";
-    }
-
     @POST
-    @Path("/login")
+    @Path("/register")
     //指定请求与返回的相应体为JSON
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public User post() {
-        User user = new User();
-        user.setName("admin");
-        return user;
+    public UserCard register(RegisterModel model) {
+
+        User user = UserFactory.findByPhone(model.getAccount().trim());
+        if(user != null){
+            UserCard userCard = new UserCard();
+            userCard.setName("已有了该用户");
+            return userCard;
+        }
+
+        user = UserFactory.register(model.getAccount(),
+                model.getPassword(),
+                model.getName());
+
+        if(user != null){
+            UserCard userCard = new UserCard();
+            userCard.setName(user.getName());
+            userCard.setPhone(user.getPhone());
+            userCard.setSex(user.getSex());
+            userCard.setFollow(true);
+            userCard.setModifyAt(user.getUpdateAt());
+            return userCard;
+        }
+        return null;
     }
 
 }
