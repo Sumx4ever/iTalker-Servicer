@@ -44,7 +44,7 @@ public class User {
 
     // 头像允许为空
     @Column
-    private String protrait;
+    private String portrait;
 
     @Column
     private String description;
@@ -136,12 +136,12 @@ public class User {
         this.password = password;
     }
 
-    public String getProtrait() {
-        return protrait;
+    public String getPortrait() {
+        return portrait;
     }
 
-    public void setProtrait(String protrait) {
-        this.protrait = protrait;
+    public void setPortrait(String portrait) {
+        this.portrait = portrait;
     }
 
     public String getDescription() {

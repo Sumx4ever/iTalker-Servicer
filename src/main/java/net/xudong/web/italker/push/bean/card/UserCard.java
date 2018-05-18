@@ -1,6 +1,7 @@
 package net.xudong.web.italker.push.bean.card;
 
 import com.google.gson.annotations.Expose;
+import net.xudong.web.italker.push.bean.db.User;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -23,7 +24,7 @@ public class UserCard {
     @Expose
     private String phone;
     @Expose
-    private String protrait;
+    private String portrait;
     @Expose
     private String desc;
     @Expose
@@ -44,6 +45,20 @@ public class UserCard {
     // 用户信息最后的更新时间
     @Expose
     private LocalDateTime modifyAt;
+
+
+    public UserCard(final User user){
+        this.id = user.getId();
+        this.name = user.getName();
+        this.phone = user.getPhone();
+        this.portrait = user.getPortrait();
+        this.desc = user.getDescription();
+        this.sex = user.getSex();
+        this.modifyAt = user.getUpdateAt();
+
+        //TODO 得到关注人和粉丝的数量
+
+    }
 
     public String getId() {
         return id;
@@ -69,12 +84,12 @@ public class UserCard {
         this.phone = phone;
     }
 
-    public String getProtrait() {
-        return protrait;
+    public String getPortrait() {
+        return portrait;
     }
 
-    public void setProtrait(String protrait) {
-        this.protrait = protrait;
+    public void setPortrait(String portrait) {
+        this.portrait = portrait;
     }
 
     public String getDesc() {
