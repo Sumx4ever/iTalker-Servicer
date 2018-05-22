@@ -1,10 +1,12 @@
 package net.xudong.web.italker.push.factory;
 
+import com.google.common.base.Strings;
 import net.xudong.web.italker.push.bean.db.User;
 import net.xudong.web.italker.push.utils.Hib;
 import net.xudong.web.italker.push.utils.TextUtil;
 import org.hibernate.Session;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -25,6 +27,65 @@ public class UserFactory {
                 .createQuery("from User where name=:inName")
                 .setParameter("inName", name)
                 .uniqueResult());
+    }
+
+    // 通过token找到user
+    // 只用于查询自己信息
+    public static User findByToken(String token) {
+        return Hib.query(session -> (User) session
+                .createQuery("from User where token=:inToken")
+                .setParameter("inToken", token)
+                .uniqueResult());
+    }
+
+    /**
+     * 当前的账户绑定pushId
+     * @param user 自己的User
+     * @param pushId 自己设备的pushId
+     * @return User
+     */
+    public static User bindPushId(User user,String pushId){
+        if(Strings.isNullOrEmpty(pushId)){
+            return null;
+        }
+        // 第一步是否有其他设备绑定了pushId
+        // 取消绑定，避免推送混乱
+        // 查询的列表不能包括自己
+        Hib.queryOnly((Session session) -> {
+            @SuppressWarnings("unchecked")
+            List<User> userList = (List<User>) session.createQuery("from User where lower(pushId)=:pushId and id !=: userId")
+                    .setParameter("pushId",pushId.toLowerCase())
+                    .setParameter("userId",user.getId())
+                    .list();
+
+            for (User u : userList) {
+                // 更新为null
+                u.setPushId(null);
+                session.saveOrUpdate(u);
+            }
+
+
+        });
+
+        if(pushId.equalsIgnoreCase(user.getPushId())){
+            // 如果当前需要绑定的设备Id，就是已经绑定过的
+            // 那么不需要额外绑定
+            return user;
+        }else{
+            // 如果当前账户之前的设备Id，和需要绑定的不同
+            // 那么需要单点登陆，让之前的设备退出账户，
+            // 给之前的账户推送一条退出消息
+            if(Strings.isNullOrEmpty(user.getPushId())){
+                // TODO 推送一条退出消息
+
+            }
+
+            user.setPushId(pushId);
+            return Hib.query(session -> {
+                session.saveOrUpdate(user);
+                return user;
+            });
+        }
     }
 
     /**

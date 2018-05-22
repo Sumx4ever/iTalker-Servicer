@@ -1,5 +1,6 @@
 package net.xudong.web.italker.push.service;
 
+import com.google.common.base.Strings;
 import net.xudong.web.italker.push.bean.api.account.AccountRspModel;
 import net.xudong.web.italker.push.bean.api.account.LoginModel;
 import net.xudong.web.italker.push.bean.api.account.RegisterModel;
@@ -28,17 +29,22 @@ public class AccountService {
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseModel<AccountRspModel> login(LoginModel model) {
 
-        if(!LoginModel.chekc(model)){
+        if (!LoginModel.chekc(model)) {
             // 返回参数异常
             return ResponseModel.buildParameterError();
         }
 
-        User user = UserFactory.login(model.getAccount(),model.getPassword().trim());
+        User user = UserFactory.login(model.getAccount(), model.getPassword().trim());
         if (user != null) {
+            // 如果有携带pushId
+            if (!Strings.isNullOrEmpty(model.getPushId())) {
+                return bind(user,model.getPushId());
+            }
+
             // 登陆成功
             AccountRspModel rspModel = new AccountRspModel(user);
             return ResponseModel.buildOk(rspModel);
-        }else{
+        } else {
             // 登陆失败
             return ResponseModel.buildLoginError();
         }
@@ -53,7 +59,7 @@ public class AccountService {
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseModel<AccountRspModel> register(RegisterModel model) {
 
-        if(!RegisterModel.chekc(model)){
+        if (!RegisterModel.chekc(model)) {
             // 返回参数异常
             return ResponseModel.buildParameterError();
         }
@@ -78,6 +84,11 @@ public class AccountService {
                 model.getName());
 
         if (user != null) {
+            // 如果有携带pushId
+            if (!Strings.isNullOrEmpty(model.getPushId())) {
+                return bind(user,model.getPushId());
+            }
+
             // 返回当前的账户
             AccountRspModel rspModel = new AccountRspModel(user);
             return ResponseModel.buildOk(rspModel);
@@ -85,6 +96,56 @@ public class AccountService {
             // 注册异常
             return ResponseModel.buildRegisterError();
         }
+    }
+
+    // 绑定pushId
+    @POST
+    @Path("/bind/{pushId}")
+    //指定请求与返回的相应体为JSON
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    // 从请求头中获取token
+    // pushId从url地址中获取
+    public ResponseModel<AccountRspModel> bind(@HeaderParam("token") String token, @PathParam("pushId") String pushId) {
+
+        if (Strings.isNullOrEmpty(token)
+                || Strings.isNullOrEmpty(pushId)) {
+            // 返回参数异常
+            return ResponseModel.buildParameterError();
+        }
+
+        // 拿到个人信息
+        User user = UserFactory.findByToken(token);
+
+        if (user != null) {
+            // 进行设备号绑定的操作
+            return bind(user, pushId);
+        } else {
+            // Token 失效，所有无法进行绑定
+            return ResponseModel.buildAccountError();
+        }
+    }
+
+
+    /**
+     * 绑定的操作
+     *
+     * @param self 自己的user
+     * @param pushId
+     * @return
+     */
+    private ResponseModel<AccountRspModel> bind(User self, String pushId) {
+        // 进行设备号绑定的操作
+        self = UserFactory.bindPushId(self, pushId);
+
+        if (self == null) {
+            // 绑定失败，则是服务器异常
+            return ResponseModel.buildServiceError();
+        }
+
+        // 返回当前账户，并且已经绑定
+        AccountRspModel rspModel = new AccountRspModel(self, true);
+        return ResponseModel.buildOk(rspModel);
     }
 
 }
